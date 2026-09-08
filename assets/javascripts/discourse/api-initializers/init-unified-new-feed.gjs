@@ -192,6 +192,8 @@ export default apiInitializer("0.5.0", (api) => {
   }
 
   function disconnect() {
+    void flush();
+
     observer?.disconnect();
     mutationObserver?.disconnect();
     observer = null;
