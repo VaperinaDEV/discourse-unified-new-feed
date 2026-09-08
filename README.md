@@ -1,5 +1,7 @@
 # Discourse Unified New Feed
 
+> 🚧 This plugin is under active development. Please do not use it in production yet.
+
 Adds a per-user feed at `/feed` which shows Unified New topics the user has not yet consumed. A topic is consumed after the configured percentage of its row remains visible for the configured dwell time.
 
 Consumed state is separate from Discourse read/unread state. The plugin does not mark topics as read.
