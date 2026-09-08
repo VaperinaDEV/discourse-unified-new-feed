@@ -1,0 +1,43 @@
+plugins:
+  unified_new_feed_enabled:
+    default: false
+    client: true
+    type: boolean
+
+  unified_new_feed_dwell_ms:
+    default: 300
+    client: true
+    min: 100
+    max: 5000
+
+  unified_new_feed_visibility:
+    default: 50
+    client: true
+    min: 10
+    max: 100
+
+  unified_new_feed_batch_size:
+    default: 25
+    client: true
+    min: 1
+    max: 100
+
+  unified_new_feed_groups:
+    type: group_list
+    list_type: compact
+    client: true
+    refresh: true
+    default: ""
+
+  unified_new_feed_empty_redirect:
+    type: enum
+    default: latest
+    choices:
+      - latest
+      - unseen
+      - top
+      - categories
+      - read
+      - hot
+    client: true
+    refresh: true

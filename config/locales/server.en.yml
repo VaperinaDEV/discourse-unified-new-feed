@@ -1,0 +1,8 @@
+en:
+  site_settings:
+    unified_new_feed_enabled: "Track Unified New topics as consumed after they have been visibly viewed in the viewport."
+    unified_new_feed_dwell_ms: "How long (in ms) a topic must remain visible before it is considered consumed."
+    unified_new_feed_visibility: "Minimum percentage of the topic row that must be visible before the dwell timer starts."
+    unified_new_feed_batch_size: "Maximum number of consumed topic IDs sent in one request."
+    unified_new_feed_groups: "Groups for which the Unified New viewport-consumption feature is active. Leave empty to enable it for all logged-in users."
+    unified_new_feed_empty_redirect: "Where to redirect when the Unified New feed is empty."

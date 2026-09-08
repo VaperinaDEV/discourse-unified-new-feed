@@ -1,0 +1,9 @@
+en:
+  js:
+    discourse_unified_new_feed:
+      feed: Feed
+      navigation_label: Feed navigation
+    filters:
+      feed:
+        title: Feed
+        title_with_count: "Feed (%{count})"
