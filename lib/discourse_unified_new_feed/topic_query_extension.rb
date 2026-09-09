@@ -3,15 +3,19 @@
 module DiscourseUnifiedNewFeed
   module TopicQueryExtension
     # Candidate NEW topic ids for topping up the Topics queue. Reuses
-    # core's own new-topic definition (consider_topics_new_when, via
-    # new_topic_duration_minutes/new_since) via new_results - this
-    # plugin never invents a parallel "is this new" rule of its own.
+    # core's own new_results, which already resolves both levels of
+    # "what counts as new" internally - the site-wide default
+    # (default_other_new_topic_duration_minutes) and the user's own
+    # override ("Consider topics new when") - together with new_since.
+    # This plugin reads neither setting and computes no duration of
+    # its own; it only takes new_results' output and layers a
+    # consumed-state on top of it.
     #
     # since: nil means "take new_results as-is" (the first, backfill
-    # sync for a user) - no extra date bound is layered on top, since
-    # new_results already resolves the effective new-topic window
-    # itself. A present since is only ever used for incremental
-    # top-ups, to avoid re-scanning the whole new_results set every
+    # sync for a user) - no extra date bound is layered on top. A
+    # present since is only ever used for incremental top-ups (it's
+    # this plugin's own last-sync watermark, not a Discourse "new"
+    # setting), to avoid re-scanning the whole new_results set every
     # time.
     #
     # Only used by FeedSync (backfill + incremental top-up); the
