@@ -8,6 +8,13 @@ import { i18n } from "discourse-i18n";
 // Reads live counts from the service (not from route @args) so the
 // labels tick down in place as items get consumed, without needing
 // the route model to refresh.
+//
+// Markup/classes intentionally mirror core's
+// topic-list/new-list-header-controls(-wrapper) (used for the
+// Topics/Replies toggle on /new) so this reuses core's own CSS instead
+// of a bespoke style - same wrapper class, same button class, same
+// "active" convention - which is also what places it in the same
+// position in the list (see templates/unified-new-feed.gjs).
 export default class UnifiedNewFeedTabs extends Component {
   @service unifiedNewFeed;
 
@@ -24,21 +31,23 @@ export default class UnifiedNewFeedTabs extends Component {
   }
 
   <template>
-    <nav class="unified-new-feed-tabs">
+    <div class="topic-replies-toggle-wrapper unified-new-feed-tabs">
       <LinkTo
         @route="unified-new-feed"
         @query={{hash tab="topic"}}
-        class="unified-new-feed-tabs__tab {{if (eq @tab "topic") "active"}}"
+        class="topics-replies-toggle --topics
+          {{if (eq @tab "topic") "active"}}"
       >
         {{this.topicsLabel}}
       </LinkTo>
       <LinkTo
         @route="unified-new-feed"
         @query={{hash tab="reply"}}
-        class="unified-new-feed-tabs__tab {{if (eq @tab "reply") "active"}}"
+        class="topics-replies-toggle --replies
+          {{if (eq @tab "reply") "active"}}"
       >
         {{this.repliesLabel}}
       </LinkTo>
-    </nav>
+    </div>
   </template>
 }

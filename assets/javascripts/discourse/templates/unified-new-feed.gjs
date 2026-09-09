@@ -7,10 +7,15 @@ import UnifiedNewFeedTabs from "../components/unified-new-feed-tabs";
 export default <template>
   <Layout @model={{@model}} @listClass="--topic-list">
     <:navigation>
-      <UnifiedNewFeedTabs @tab={{@model.tab}} />
       <Navigation @filterType="feed" @model={{@model.list}} />
     </:navigation>
     <:list>
+      {{! Placed here (not in :navigation) and styled with core's own
+        topic-replies-toggle-wrapper/topics-replies-toggle classes so it
+        sits in the same spot, with the same look, as the Topics/Replies
+        toggle on /new. }}
+      <UnifiedNewFeedTabs @tab={{@model.tab}} />
+
       {{! Branches render two distinct blocks, so switching tabs always
         tears down and remounts UnifiedNewFeedList - which is what lets
         it safely set up viewport tracking (Topics) or click tracking

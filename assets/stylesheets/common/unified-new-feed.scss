@@ -1,24 +1,17 @@
-.unified-new-feed-tabs {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--primary-low);
+@use "lib/viewport";
 
-  &__tab {
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--d-nav-pill-border-radius);
-    color: var(--primary-medium);
-    font-weight: bold;
-
-    &:hover {
-      color: var(--primary);
-      background: var(--primary-low);
-    }
-
-    &.active {
-      color: var(--secondary);
-      background: var(--tertiary);
+// The toggle itself (.topic-replies-toggle-wrapper / .topics-replies-toggle)
+// is intentionally left unstyled here - it reuses core's own CSS from
+// app/assets/stylesheets/common/base/_topic-list.scss so it matches /new
+// exactly. The only thing that needs a fixup is this: core's mobile rule
+// that removes the duplicate top border on the topic list right after the
+// toggle targets `.topic-replies-toggle-wrapper ~ .topic-list`, but here
+// the list is wrapped in an extra `.unified-new-feed-list` div, so that
+// sibling selector never matches. Reproduce it through the wrapper.
+.topic-replies-toggle-wrapper + .unified-new-feed-list {
+  @include viewport.until(sm) {
+    .topic-list-body {
+      border-width: 0;
     }
   }
 }
