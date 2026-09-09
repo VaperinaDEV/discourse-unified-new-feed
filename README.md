@@ -2,17 +2,42 @@
 
 > 🚧 This plugin is under active development. Please do not use it in production yet.
 
-Adds a per-user feed at `/feed` which shows Unified New topics the user has not yet consumed. A topic is consumed after the configured percentage of its row remains visible for the configured dwell time.
+Adds a per-user feed at `/feed`, fully decoupled from Discourse's own "Unified New" list. `/feed` has two independent tabs, no "All" - and the two tabs work in genuinely different ways:
 
-Consumed state is separate from Discourse read/unread state. The plugin does not mark topics as read.
+## Topics
 
-For enabled groups, a "Feed" item is added to the top navigation (via `addNavigationBarItem`, so it works regardless of `top_menu`), and `/` sends eligible users straight into the feed. This redirect happens inside `discovery.index`'s own `beforeModel` (the same hook core uses to route `/` to the configured homepage), so it never renders the normal homepage first - unlike an `onPageChange`-based redirect, there's no flash. When the feed is empty, both `/` and `/feed` itself redirect to the configured fallback route.
+New topics, per Discourse's own **`consider_topics_new_when`** setting (via core's `new_results`) - this plugin never invents a parallel "is this new" rule.
+
+- **State**: plugin-tracked. `UnifiedNewFeedItem` holds one row per user per pending (not-yet-consumed) topic.
+- **Initial seed**: the first time a user's feed is built, `DiscourseUnifiedNewFeed::FeedSync` takes core's `new_results` as-is - no date bound of our own. `new_results` already resolves the effective "consider topics new when" window itself (`new_topic_duration_minutes`, falling back to the site default, including the "always"/"last visit" special cases) together with `new_since`, so a brand-new user naturally gets "topics created within that window" and an existing user naturally gets nothing they've already effectively seen. This plugin never re-derives or duplicates that window.
+- **Ongoing**: every later sync only looks at topics created since the last sync (a per-user watermark in `UnifiedNewFeedSync`), so it only ever adds genuinely new content.
+- **Consumption**: viewport-based. A topic is marked consumed once it has been visible past the configured threshold for the configured dwell time. It **stays visible in the current list** when that happens (no DOM/model removal, no scroll jump) - it simply won't be there the next time the feed loads, since its row is deleted server-side. Once consumed, a topic never comes back on its own.
+
+## Replies
+
+Topics with unread posts, per Discourse's own **read/unread tracking** (via core's `unread_results`) - again, no parallel definition.
+
+- **State**: none. There is no table, no sync, no consumed flag for this tab at all.
+- **Membership**: purely live. A topic is in the Replies feed because Discourse itself currently considers it unread for this user - full stop.
+- **Leaving the feed**: purely live. The moment Discourse's own tracking says there's nothing unread left in that topic (the user read it - from this feed, from `/unread`, from a notification, anywhere), it drops out. The plugin never marks a topic read and never fakes a "consumed" state for it.
+- **Reappearing**: a topic the user has already read (and that dropped out of Replies) can reappear if a new reply arrives, exactly like core's own Unread list - there's no plugin-side history to block it, because there's no plugin-side history at all for this tab.
+
+## Empty states
+
+- If **one** tab has nothing left, `/feed` stays put and that tab shows its own inline empty message. The user can still switch to the other tab.
+- Only when **both** tabs are empty does `/feed` (and the homepage override) redirect to the configured empty-redirect route.
+
+## Navigation & homepage
+
+For enabled groups, a "Feed" item is added to the top navigation (via `addNavigationBarItem`) showing the combined Topics+Replies count, and `/` sends eligible users straight into whichever tab has items (preferring Topics). This happens inside `discovery.index`'s own `beforeModel`, so there's no homepage flash before the redirect.
+
+Note: because Replies has no plugin-tracked consumption, its live counter (the tab label, the nav item) only updates on the next fetch (switching tabs, reloading, revisiting the homepage) - not instantly while reading a topic, since that would require guessing at Discourse's internal read-marking rather than just asking it fresh each time.
 
 ## Settings
 
 - Enabled
-- Dwell time
-- Visibility threshold
-- Batch size
+- Dwell time (Topics tab only)
+- Visibility threshold (Topics tab only)
+- Batch size (safety cap on the consume endpoint; also the Topics tab's viewport-flush batch size)
 - Enabled groups
 - Empty redirect

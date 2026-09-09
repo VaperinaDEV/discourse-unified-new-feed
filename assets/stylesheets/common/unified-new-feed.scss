@@ -1,0 +1,28 @@
+.unified-new-feed-tabs {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+  border-bottom: 1px solid var(--primary-low);
+
+  &__tab {
+    padding: 0.5em 0.25em;
+    color: var(--primary-medium);
+    font-weight: bold;
+    border-bottom: 3px solid transparent;
+
+    &:hover {
+      color: var(--primary);
+    }
+
+    &.active {
+      color: var(--primary);
+      border-bottom-color: var(--tertiary);
+    }
+  }
+}
+
+.unified-new-feed-list__empty {
+  padding: 3em 1em;
+  text-align: center;
+  color: var(--primary-medium);
+}
