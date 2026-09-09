@@ -5,12 +5,9 @@ import { emptyRedirectRouteName } from "../lib/unified-new-feed-empty-redirect";
 
 const ROUTE_NAME = "unified-new-feed";
 
-// Consumption (viewport tracking for Topics, click tracking for
-// Replies) now lives in components/unified-new-feed-list.gjs, scoped
-// to whichever tab is actually mounted. This initializer only owns
-// the two things that exist outside the /feed page itself: the top
-// nav "Feed (N)" item, and sending eligible users straight into /feed
-// from the homepage.
+// Consumption tracking lives in unified-new-feed-list.gjs. This
+// initializer only handles the top nav "Feed (N)" item and redirecting
+// eligible users into /feed from the homepage.
 function isEligibleUser(currentUser, siteSettings) {
   if (!siteSettings.unified_new_feed_enabled || !currentUser) {
     return false;
@@ -41,27 +38,22 @@ export default apiInitializer("0.7.0", (api) => {
 
   const feedState = api.container.lookup("service:unified-new-feed");
 
-  // "feed" isn't a top_menu filter, so it needs the ExtraNavItem path
-  // (addNavigationBarItem) to render; it still highlights correctly since
-  // its `name` matches the route's `@filterType="feed"`.
+  // "feed" isn't a top_menu filter, so it needs addNavigationBarItem to
+  // render; `name` still matches the route's @filterType for highlighting.
   api.addNavigationBarItem({
     name: "feed",
     title: i18n("discourse_unified_new_feed.navigation_label"),
     href: "/feed",
     before: siteSettings.top_menu.split("|")[0],
-    // Hidden when both tabs are empty, since /feed would just redirect
-    // away anyway.
+    // Hidden when both tabs are empty, since /feed would just redirect away.
     customFilter: () => (feedState.count || 0) > 0,
-    // No `displayName`: NavItem builds "Feed (N)" itself from
-    // filters.feed.title(_with_count). `count` must be a getter so it
-    // stays live across buildList() calls instead of freezing at boot.
+    // Getter (not a plain value) so it stays live across buildList() calls.
     get count() {
       return feedState.count || 0;
     },
   });
 
-  // Hook into discovery.index's beforeModel (before anything renders) so
-  // eligible users land on /feed with no homepage flash.
+  // Redirect before anything renders, so there's no homepage flash.
   api.modifyClass("route:discovery.index", {
     pluginId: "discourse-unified-new-feed",
 
@@ -82,8 +74,7 @@ export default apiInitializer("0.7.0", (api) => {
         }
 
         if (repliesCount > 0) {
-          // The payload above was fetched for tab=topic, so it can't be
-          // reused for the replies tab - the route will fetch its own.
+          // Fetched above for tab=topic, so the route fetches its own.
           this.router.replaceWith(ROUTE_NAME, {
             queryParams: { tab: "reply" },
           });

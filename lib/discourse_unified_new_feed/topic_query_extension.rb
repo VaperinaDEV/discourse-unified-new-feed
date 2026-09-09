@@ -3,24 +3,15 @@
 module DiscourseUnifiedNewFeed
   module TopicQueryExtension
     # Candidate NEW topic ids for topping up the Topics queue. Reuses
-    # core's own new_results, which already resolves both levels of
-    # "what counts as new" internally - the site-wide default
-    # (default_other_new_topic_duration_minutes) and the user's own
-    # override ("Consider topics new when") - together with new_since.
-    # This plugin reads neither setting and computes no duration of
-    # its own; it only takes new_results' output and layers a
-    # consumed-state on top of it.
+    # core's new_results as-is (site + per-user "new" settings already
+    # resolved there); this plugin computes no duration of its own.
     #
-    # since: nil means "take new_results as-is" (the first, backfill
-    # sync for a user) - no extra date bound is layered on top. A
-    # present since is only ever used for incremental top-ups (it's
-    # this plugin's own last-sync watermark, not a Discourse "new"
-    # setting), to avoid re-scanning the whole new_results set every
-    # time.
+    # since: nil takes new_results as-is (first backfill sync). A
+    # present value is this plugin's own last-sync watermark, used for
+    # incremental top-ups so we don't re-scan the whole new_results set.
     #
-    # Only used by FeedSync (backfill + incremental top-up); the
-    # Topics tab itself is served from the queue table, not from a
-    # live call to this method.
+    # Used only by FeedSync - the Topics tab itself reads the queue
+    # table, not this method.
     def feed_new_topic_ids(since: nil)
       options = @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id)
 
@@ -30,17 +21,11 @@ module DiscourseUnifiedNewFeed
       relation.reorder(nil).pluck(:id)
     end
 
-    # Live Replies list. Reuses core's own unread definition
-    # (unread_results / TopicUser tracking) directly, every call - no
-    # plugin state is involved. A topic is here purely because
-    # Discourse itself still considers it unread for this user, and it
-    # will stop appearing the moment Discourse's own tracking says
-    # there's nothing unread left, regardless of anything this plugin
-    # has ever done with it before.
+    # Live Replies list. Calls core's unread_results directly every
+    # time - no plugin state involved.
     #
-    # Cursor/order are applied explicitly here rather than trusted to
-    # @options, so pagination has a stable, unambiguous tie-break even
-    # when several topics share a bumped_at.
+    # Cursor/order applied explicitly (not via @options) for a stable
+    # tie-break when several topics share a bumped_at.
     def feed_unread_topics(limit:, before_bumped_at: nil, before_topic_id: nil)
       options = @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id)
 

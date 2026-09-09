@@ -2,18 +2,14 @@ import Service from "@ember/service";
 import { tracked } from "@glimmer/tracking";
 
 export default class UnifiedNewFeedService extends Service {
-  // Kept fully separate per tab. Topics is plugin-consumed (viewport
-  // dwell), so it can be decremented instantly client-side. Replies is
-  // governed entirely by Discourse's own read tracking - this plugin
-  // never marks anything read, so repliesCount only ever changes via a
-  // fresh fetch (setCounts), never an explicit decrement.
+  // Topics decrements instantly client-side (plugin-consumed). Replies
+  // only ever changes via setCounts, since it's driven by Discourse's
+  // own read tracking, not by this plugin.
   @tracked topicsCount = null;
   @tracked repliesCount = null;
 
-  // Set by the homepage override before it transitions here, so
-  // model() can reuse the already-fetched payload instead of
-  // requesting it again. { tab, result } - only reused when the tab
-  // matches what the route is about to render.
+  // Set by the homepage override before transitioning here, so model()
+  // can reuse an already-fetched payload for the matching tab.
   pendingFeedResult = null;
 
   // Combined total, used for the single "Feed (N)" nav bar item.

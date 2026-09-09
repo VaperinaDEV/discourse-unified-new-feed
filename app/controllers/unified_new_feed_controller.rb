@@ -18,10 +18,9 @@ class UnifiedNewFeedController < ListController
   private
 
   # Queue-backed: served from UnifiedNewFeedItem, topped up from core's
-  # new_results. Leaves the feed only via the plugin's own consume flow.
+  # new_results.
   def topics_list(per_page)
-    # Only top up on a fresh page load, not on every "load more" page -
-    # pagination requests carry before_item_id, initial loads don't.
+    # Only top up on a fresh page load, not on "load more" pagination.
     DiscourseUnifiedNewFeed::FeedSync.sync!(current_user) if params[:before_item_id].blank?
 
     query = DiscourseUnifiedNewFeed::FeedItemsQuery.new(current_user)
@@ -39,12 +38,8 @@ class UnifiedNewFeedController < ListController
     list
   end
 
-  # Fully live, no plugin state at all: a topic is here purely because
-  # Discourse's own tracking currently says the user has unread posts
-  # in it, and it leaves purely because that stops being true - via
-  # the user actually reading it (anywhere, not just from this feed),
-  # never via anything this plugin does. The plugin never marks a
-  # topic read and keeps no consumed/seen flag for this tab.
+  # Fully live, no plugin state: driven entirely by Discourse's own
+  # unread tracking, which this plugin never touches.
   def replies_list(per_page)
     topic_query = TopicQuery.new(current_user)
 

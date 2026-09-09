@@ -7,14 +7,9 @@ class RenameUnifiedNewFeedSeensToItems < ActiveRecord::Migration[7.2]
     remove_index :unified_new_feed_items, name: :idx_unified_new_feed_seens_user_topic
     remove_index :unified_new_feed_items, name: :idx_unified_new_feed_seens_topic
 
-    # Old rows meant "already consumed" (seen). Under the new queue
-    # semantics a row means "still pending" - the opposite meaning - so
-    # old rows can't carry forward. Wipe them; the next per-user sync
-    # (FeedSync) requeues everything currently new for that user, which
-    # is exactly the one-time "initialization" pass.
-    #
-    # This table is now Topics-only: Replies has no persisted state at
-    # all any more (see FeedSync / TopicQueryExtension#feed_unread_topics).
+    # Old rows meant "seen"; new semantics are the opposite ("still
+    # pending"), so old rows can't carry forward. Wipe them - the next
+    # per-user FeedSync requeues everything currently new.
     execute "DELETE FROM unified_new_feed_items"
 
     add_index :unified_new_feed_items,

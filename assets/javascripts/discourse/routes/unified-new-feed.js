@@ -44,10 +44,8 @@ export default class UnifiedNewFeedRoute extends Route {
   }
 
   afterModel(model) {
-    // Only bail out of /feed entirely when BOTH tabs are exhausted -
-    // an empty current tab with content still waiting in the other
-    // tab shows its own inline empty state instead (see the list
-    // component), and the user can still switch tabs.
+    // Only leave /feed when BOTH tabs are exhausted - an empty current
+    // tab with content in the other just shows its inline empty state.
     if (model.topicsCount !== 0 || model.repliesCount !== 0) {
       return;
     }

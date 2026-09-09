@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 module DiscourseUnifiedNewFeed
-  # Reads UnifiedNewFeedItem (Topics tab only). This is deliberately
-  # independent of TopicQuery/new state - once an item is queued, its
-  # presence here (and so in the feed) depends only on our own table,
-  # never on Discourse's live new/read state.
+  # Reads UnifiedNewFeedItem (Topics tab only) - independent of
+  # TopicQuery/new state once an item is queued.
   class FeedItemsQuery
     def initialize(user)
       @user = user

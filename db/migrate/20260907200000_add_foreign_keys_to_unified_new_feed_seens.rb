@@ -2,8 +2,8 @@
 
 class AddForeignKeysToUnifiedNewFeedSeens < ActiveRecord::Migration[7.2]
   def up
-    # Remove rows already orphaned by hard-deleted users/topics before
-    # adding the constraints below, so they don't fail on existing data.
+    # Clear rows orphaned by hard-deleted users/topics first, so the
+    # constraints below don't fail on existing data.
     execute <<~SQL
       DELETE FROM unified_new_feed_seens
       WHERE user_id NOT IN (SELECT id FROM users)

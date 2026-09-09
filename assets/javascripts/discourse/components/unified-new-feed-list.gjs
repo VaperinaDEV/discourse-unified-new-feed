@@ -12,21 +12,11 @@ import { i18n } from "discourse-i18n";
 const ROW_SELECTOR = ".topic-list-item[data-topic-id]";
 const FLUSH_INTERVAL = 2000;
 
-// Each mount of this component is for exactly one tab, for its whole
-// lifetime - the parent template forces a remount on tab switch (see
-// templates/unified-new-feed.gjs).
-//
-// Topics ("topic"): viewport-based - a row is marked consumed once it
-// has been visible past the configured threshold for the configured
-// dwell time. It stays visible in the CURRENT list (no splice, no
-// scroll jump) - it just won't be there the next time the feed is
-// loaded, since its queue row is gone server-side by then.
-//
-// Replies ("reply"): no tracking of any kind runs here. The tab is a
-// plain, read-only render of whatever the server returned - leaving
-// the feed happens purely through Discourse's own read tracking
-// (visiting the topic, core's own scroll-based read marking, etc.),
-// which this component has no part in and no visibility into.
+// One mount per tab (parent forces a remount on tab switch, see
+// templates/unified-new-feed.gjs). Topics tracks viewport dwell and
+// marks rows consumed (removed server-side next load, not spliced
+// here). Replies does no tracking of its own - it just relies on
+// Discourse's normal read tracking.
 export default class UnifiedNewFeedList extends Component {
   @service siteSettings;
   @service unifiedNewFeed;
@@ -159,10 +149,8 @@ export default class UnifiedNewFeedList extends Component {
     }
   }
 
-  // Marks the row consumed and queues it for the server, but leaves it
-  // exactly where it is in the current list - no DOM/model mutation,
-  // so nothing shifts under the user mid-scroll. It simply won't come
-  // back the next time the feed loads.
+  // Queues for the server but leaves the row in place - nothing
+  // shifts mid-scroll, it just won't reappear on the next load.
   markTopicConsumed(row, topicId) {
     if (this.markedConsumed.has(topicId)) {
       return;

@@ -10,17 +10,10 @@ export default <template>
       <Navigation @filterType="feed" @model={{@model.list}} />
     </:navigation>
     <:list>
-      {{! Placed here (not in :navigation) and styled with core's own
-        topic-replies-toggle-wrapper/topics-replies-toggle classes so it
-        sits in the same spot, with the same look, as the Topics/Replies
-        toggle on /new. }}
       <UnifiedNewFeedTabs @tab={{@model.tab}} />
 
-      {{! Branches render two distinct blocks, so switching tabs always
-        tears down and remounts UnifiedNewFeedList - which is what lets
-        it safely set up viewport tracking (Topics) or click tracking
-        (Replies) once per mount instead of reacting to @tab changing
-        on a persisting instance. }}
+      {{! Two distinct branches so switching tabs always remounts
+        UnifiedNewFeedList, letting it set up tracking once per mount. }}
       {{#if (eq @model.tab "reply")}}
         <UnifiedNewFeedList @model={{@model.list}} @tab="reply" />
       {{else}}
