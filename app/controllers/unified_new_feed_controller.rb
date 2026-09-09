@@ -26,7 +26,11 @@ class UnifiedNewFeedController < ListController
     query = DiscourseUnifiedNewFeed::FeedItemsQuery.new(current_user)
     items = query.page(before_item_id: params[:before_item_id], limit: per_page)
 
-    topics_by_id = Topic.secured(guardian).where(id: items.map(&:topic_id)).index_by(&:id)
+    topics_by_id =
+      Topic.secured(guardian)
+        .where.not(archetype: Archetype.private_message)
+        .where(id: items.map(&:topic_id))
+        .index_by(&:id)
     ordered_topics = items.filter_map { |item| topics_by_id[item.topic_id] }
 
     list = TopicQuery.new(current_user).create_list(:new, { unordered: true }, ordered_topics)
