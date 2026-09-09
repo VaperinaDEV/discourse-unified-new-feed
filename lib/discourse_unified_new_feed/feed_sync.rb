@@ -34,7 +34,7 @@ module DiscourseUnifiedNewFeed
       sync_time = Time.current
       since = sync_record.last_synced_at
 
-      topic_query = TopicQuery.new(user, unordered: true)
+      topic_query = TopicQuery.new(user)
       enqueue(user, topic_query.feed_new_topic_ids(since: since))
 
       sync_record.last_synced_at = sync_time
