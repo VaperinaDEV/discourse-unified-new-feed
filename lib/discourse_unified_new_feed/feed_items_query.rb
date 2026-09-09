@@ -38,15 +38,17 @@ module DiscourseUnifiedNewFeed
         .joins(:topic)
         .where(user_id: @user.id)
         .where.not(topics: { archetype: Archetype.private_message })
-        .order(created_at: :desc, id: :desc)
+        .order("topics.created_at DESC, unified_new_feed_items.id DESC")
     end
 
     def older_than(scope, item)
+      return scope unless item
+
       scope.where(
-        "(unified_new_feed_items.created_at < :created_at) OR " \
-          "(unified_new_feed_items.created_at = :created_at AND unified_new_feed_items.id < :id)",
-        created_at: item.created_at,
-        id: item.id,
+        "(topics.created_at < :topic_created_at) OR " \
+          "(topics.created_at = :topic_created_at AND unified_new_feed_items.id < :item_id)",
+        topic_created_at: item.topic.created_at,
+        item_id: item.id,
       )
     end
   end
