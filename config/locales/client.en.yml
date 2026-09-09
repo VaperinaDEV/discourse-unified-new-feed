@@ -6,9 +6,6 @@ en:
       tabs:
         topics: "Topics (%{count})"
         replies: "Replies (%{count})"
-      empty:
-        topics: "No more new topics."
-        replies: "No more new replies."
     filters:
       feed:
         title: Feed

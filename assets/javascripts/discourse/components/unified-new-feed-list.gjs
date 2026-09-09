@@ -5,9 +5,9 @@ import { action } from "@ember/object";
 import { service } from "@ember/service";
 
 import { ajax } from "discourse/lib/ajax";
+import EmptyTopicFilter from "discourse/components/empty-topic-filter";
 import List from "discourse/components/topic-list/list";
 import DLoadMore from "discourse/ui-kit/d-load-more";
-import { i18n } from "discourse-i18n";
 
 const ROW_SELECTOR = ".topic-list-item[data-topic-id]";
 const FLUSH_INTERVAL = 2000;
@@ -20,6 +20,7 @@ const FLUSH_INTERVAL = 2000;
 export default class UnifiedNewFeedList extends Component {
   @service siteSettings;
   @service unifiedNewFeed;
+  @service router;
 
   queuedTopicIds = new Set();
   markedConsumed = new Set();
@@ -38,10 +39,39 @@ export default class UnifiedNewFeedList extends Component {
     return (this.args.model.topics?.length || 0) === 0 && !this.args.model.canLoadMore;
   }
 
-  get emptyMessage() {
-    return this.isTopicsTab
-      ? i18n("discourse_unified_new_feed.empty.topics")
-      : i18n("discourse_unified_new_feed.empty.replies");
+  // EmptyTopicFilter args, mapped onto our two tabs instead of core's
+  // single-list subset. Replies is genuinely core's own unread list,
+  // so it gets the "unread" empty text/tip rather than "new".
+  get newFilter() {
+    return this.isTopicsTab;
+  }
+
+  get unreadFilter() {
+    return !this.isTopicsTab;
+  }
+
+  get newListSubset() {
+    return this.isTopicsTab ? "topics" : "replies";
+  }
+
+  get trackingCounts() {
+    return {
+      newTopics: this.unifiedNewFeed.topicsCount || 0,
+      newReplies: this.unifiedNewFeed.repliesCount || 0,
+    };
+  }
+
+  // EmptyTopicFilter's "browse the other list" CTA calls this with
+  // "topics"/"replies" - translate that into our tab route instead of
+  // swapping a subset in place.
+  @action
+  changeNewListSubset(subset) {
+    const tab = subset === "topics" ? "topic" : "reply";
+    if (tab === this.args.tab) {
+      return;
+    }
+
+    this.router.transitionTo("unified-new-feed", { queryParams: { tab } });
   }
 
   @action
@@ -198,9 +228,13 @@ export default class UnifiedNewFeedList extends Component {
       {{willDestroy this.teardown}}
     >
       {{#if this.isEmpty}}
-        <div class="unified-new-feed-list__empty">
-          <p>{{this.emptyMessage}}</p>
-        </div>
+        <EmptyTopicFilter
+          @changeNewListSubset={{this.changeNewListSubset}}
+          @newFilter={{this.newFilter}}
+          @newListSubset={{this.newListSubset}}
+          @trackingCounts={{this.trackingCounts}}
+          @unreadFilter={{this.unreadFilter}}
+        />
       {{else}}
         <List
           @showPosters={{true}}
