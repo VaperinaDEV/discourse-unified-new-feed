@@ -3,6 +3,9 @@ en:
     discourse_unified_new_feed:
       feed: Feed
       navigation_label: Feed navigation
+      tabs:
+        topics: "Topics (%{count})"
+        replies: "Replies (%{count})"
     filters:
       feed:
         title: Feed

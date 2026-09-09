@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Topics-only. The Replies tab never calls this - it has no consumed
+# state, it relies entirely on Discourse's own read tracking.
 class UnifiedNewFeedSeenController < ApplicationController
   requires_login
 
@@ -10,34 +12,15 @@ class UnifiedNewFeedSeenController < ApplicationController
       nil
     end.uniq.first(SiteSetting.unified_new_feed_batch_size)
 
-    return render json: success_json if topic_ids.empty?
+    return render json: success_json.merge(topic_ids: []) if topic_ids.empty?
 
-    existing_topic_ids = Topic.where(id: topic_ids).pluck(:id)
-    return render json: success_json if existing_topic_ids.empty?
+    consumed_ids =
+      UnifiedNewFeedItem.where(user_id: current_user.id, topic_id: topic_ids).pluck(:topic_id)
 
-    already_consumed =
-      UnifiedNewFeedSeen
-        .where(user_id: current_user.id, topic_id: existing_topic_ids)
-        .pluck(:topic_id)
+    return render json: success_json.merge(topic_ids: []) if consumed_ids.empty?
 
-    new_topic_ids = existing_topic_ids - already_consumed
-    return render json: success_json.merge(topic_ids: []) if new_topic_ids.empty?
+    UnifiedNewFeedItem.where(user_id: current_user.id, topic_id: consumed_ids).delete_all
 
-    now = Time.current
-    rows = new_topic_ids.map do |topic_id|
-      {
-        user_id: current_user.id,
-        topic_id: topic_id,
-        created_at: now,
-        updated_at: now,
-      }
-    end
-
-    UnifiedNewFeedSeen.insert_all(
-      rows,
-      unique_by: :idx_unified_new_feed_seens_user_topic,
-    )
-
-    render json: success_json.merge(topic_ids: new_topic_ids)
+    render json: success_json.merge(topic_ids: consumed_ids)
   end
 end

@@ -1,0 +1,17 @@
+@use "lib/viewport";
+
+// The toggle itself (.topic-replies-toggle-wrapper / .topics-replies-toggle)
+// is intentionally left unstyled here - it reuses core's own CSS from
+// app/assets/stylesheets/common/base/_topic-list.scss so it matches /new
+// exactly. The only thing that needs a fixup is this: core's mobile rule
+// that removes the duplicate top border on the topic list right after the
+// toggle targets `.topic-replies-toggle-wrapper ~ .topic-list`, but here
+// the list is wrapped in an extra `.unified-new-feed-list` div, so that
+// sibling selector never matches. Reproduce it through the wrapper.
+.topic-replies-toggle-wrapper + .unified-new-feed-list {
+  @include viewport.until(sm) {
+    .topic-list-body {
+      border-width: 0;
+    }
+  }
+}

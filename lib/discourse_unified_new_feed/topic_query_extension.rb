@@ -2,59 +2,52 @@
 
 module DiscourseUnifiedNewFeed
   module TopicQueryExtension
-    def list_unified_new(options = {})
-      feed_options = @options.merge(options).dup
-      feed_options[:filter] = "new"
-      feed_options[:unordered] = true
+    # Candidate NEW topic ids for topping up the Topics queue. Reuses
+    # core's new_results as-is (site + per-user "new" settings already
+    # resolved there); this plugin computes no duration of its own.
+    #
+    # since: nil takes new_results as-is (first backfill sync). A
+    # present value is this plugin's own last-sync watermark, used for
+    # incremental top-ups so we don't re-scan the whole new_results set.
+    #
+    # Used only by FeedSync - the Topics tab itself reads the queue
+    # table, not this method.
+    def feed_new_topic_ids(since: nil)
+      options = @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id)
 
-      cursor_relation = unified_new_results(feed_options)
-      topics = cursor_relation.to_a
-      list = create_list(:new, { unordered: true }, topics)
-      list.unconsumed_count = unified_new_count
+      relation = new_results(options)
+      relation = relation.where("topics.created_at > ?", since) if since
 
-      list
+      relation.reorder(nil).pluck(:id)
     end
 
-    def unified_new_count
-      unified_new_results(
-        @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id),
-      ).reorder(nil).count(:id)
-    end
+    # Live Replies list. Calls core's unread_results directly every
+    # time - no plugin state involved.
+    #
+    # Cursor/order applied explicitly (not via @options) for a stable
+    # tie-break when several topics share a bumped_at.
+    def feed_unread_topics(limit:, before_bumped_at: nil, before_topic_id: nil)
+      options = @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id)
 
-    def unified_new_more?(options = {})
-      unified_new_results(@options.merge(options).merge(limit: false)).limit(1).exists?
-    end
+      relation = unread_results(options).reorder("topics.bumped_at DESC, topics.id DESC")
 
-    private
-
-    def unified_new_results(options)
-      options = options.dup
-      consumed_scope = UnifiedNewFeedSeen.where(user_id: @user.id).select(:topic_id)
-      options[:except_topic_ids] = consumed_scope
-
-      results =
-        case options[:subset]
-        when "topics"
-          new_results(options)
-        when "replies"
-          unread_results(options)
-        else
-          new_and_unread_results(options)
-        end
-
-      if (bumped_at = options[:before_bumped_at]).present? && (topic_id = options[:before_topic_id]).present?
-        timestamp = Time.iso8601(bumped_at)
-        results = results.where(
-          "(topics.bumped_at < ?) OR (topics.bumped_at = ? AND topics.id < ?)",
-          timestamp,
-          timestamp,
-          topic_id.to_i,
+      if before_bumped_at.present? && before_topic_id.present?
+        relation = relation.where(
+          "(topics.bumped_at < :bumped_at) OR " \
+            "(topics.bumped_at = :bumped_at AND topics.id < :id)",
+          bumped_at: before_bumped_at,
+          id: before_topic_id,
         )
       end
 
-      results
-    rescue ArgumentError
-      results
+      relation.limit(limit).to_a
+    end
+
+    # Live count for the Replies tab label - same definition as
+    # feed_unread_topics, just count instead of fetch.
+    def feed_unread_count
+      options = @options.merge(limit: false, page: nil).except(:before_bumped_at, :before_topic_id)
+      unread_results(options).reorder(nil).count(:id)
     end
   end
 end

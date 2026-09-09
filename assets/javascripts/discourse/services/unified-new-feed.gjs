@@ -2,31 +2,40 @@ import Service from "@ember/service";
 import { tracked } from "@glimmer/tracking";
 
 export default class UnifiedNewFeedService extends Service {
-  @tracked count = null;
+  // Topics decrements instantly client-side (plugin-consumed). Replies
+  // only ever changes via setCounts, since it's driven by Discourse's
+  // own read tracking, not by this plugin.
+  @tracked topicsCount = null;
+  @tracked repliesCount = null;
 
-  // Set by the homepage override before it transitions here, so model()
-  // can reuse the already-fetched payload instead of requesting it again.
+  // Set by the homepage override before transitioning here, so model()
+  // can reuse an already-fetched payload for the matching tab.
   pendingFeedResult = null;
 
-  setCount(value) {
-    this.count = Number.isFinite(Number(value)) ? Number(value) : null;
+  // Combined total, used for the single "Feed (N)" nav bar item.
+  get count() {
+    return (this.topicsCount || 0) + (this.repliesCount || 0);
   }
 
-  decrement(amount) {
-    if (this.count === null) {
+  setCounts({ topics, replies }) {
+    this.topicsCount = Number.isFinite(Number(topics)) ? Number(topics) : null;
+    this.repliesCount = Number.isFinite(Number(replies)) ? Number(replies) : null;
+  }
+
+  decrementTopics(amount) {
+    if (this.topicsCount === null) {
       return;
     }
-
-    this.count = Math.max(0, this.count - amount);
+    this.topicsCount = Math.max(0, this.topicsCount - amount);
   }
 
-  stashFeedResult(result) {
-    this.pendingFeedResult = result;
+  stashFeedResult(pending) {
+    this.pendingFeedResult = pending;
   }
 
-  takePendingFeedResult() {
-    const result = this.pendingFeedResult;
+  takePendingFeedResult(tab) {
+    const pending = this.pendingFeedResult;
     this.pendingFeedResult = null;
-    return result;
+    return pending && pending.tab === tab ? pending.result : null;
   }
 }
