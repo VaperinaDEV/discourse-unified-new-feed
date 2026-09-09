@@ -24,7 +24,7 @@ function isEligibleUser(currentUser, siteSettings) {
 
   return (
     groupIds.length === 0 ||
-    !!currentUser.groups?.some((group) => groupIds.includes(Number(group.id)))
+    !!currentUser.visibleGroups?.some((group) => groupIds.includes(Number(group.id)))
   );
 }
 
