@@ -24,13 +24,21 @@ module DiscourseUnifiedNewFeed
     end
 
     def self.count_for(user)
-      UnifiedNewFeedItem.where(user_id: user.id).count
+      UnifiedNewFeedItem
+        .joins(:topic)
+        .where(user_id: user.id)
+        .where.not(topics: { archetype: Archetype.private_message })
+        .count
     end
 
     private
 
     def base_scope
-      UnifiedNewFeedItem.where(user_id: @user.id).order(created_at: :desc, id: :desc)
+      UnifiedNewFeedItem
+        .joins(:topic)
+        .where(user_id: @user.id)
+        .where.not(topics: { archetype: Archetype.private_message })
+        .order(created_at: :desc, id: :desc)
     end
 
     def older_than(scope, item)

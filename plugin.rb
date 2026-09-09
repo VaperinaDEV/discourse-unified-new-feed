@@ -2,7 +2,7 @@
 
 # name: discourse-unified-new-feed
 # about: Tracks Unified New topics as consumed when they are actually viewed in the viewport.
-# version: 0.8.1
+# version: 0.9.7
 # authors: VaperinaDEV
 
 enabled_site_setting :unified_new_feed_enabled
